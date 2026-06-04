@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Личный портфолио + генератор резюме
 
-## Getting Started
+Сайт-портфолио Михаила Мертехина и инструмент для сборки резюме под конкретную вакансию через Claude API.
 
-First, run the development server:
+## Что внутри
+
+- **Публичный сайт** (`/`) — лендинг с кейсами, проектами, навыками. Эту ссылку прикладываешь к резюме при отклике.
+- **Генератор резюме** (`/generate`) — вставляешь описание вакансии, на выходе DOCX-файл, собранный из твоего профиля.
+- **База** — `data/seed.json`. Все данные о тебе. Расширяешь напрямую — сайт автоматически обновляется при пересборке.
+
+## Локальный запуск
 
 ```bash
+npm install
+cp .env.local.example .env.local   # вставь свой ANTHROPIC_API_KEY для генератора
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Сайт: <http://localhost:3000> · Генератор: <http://localhost:3000/generate>
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Стек
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Next.js 14 (App Router) + TypeScript
+- Tailwind CSS + Framer Motion + Lucide icons
+- `@anthropic-ai/sdk` — Claude API (модель `claude-sonnet-4-5`)
+- `docx` — рендер Word-документа
+- `zod` — валидация схемы профиля
 
-## Learn More
+## Как редактировать данные
 
-To learn more about Next.js, take a look at the following resources:
+1. Открой `data/seed.json`.
+2. Найди нужную секцию (`cases`, `projects`, `skills` и т.д.) и добавь/измени запись.
+3. Каждая запись поддерживает поля:
+   - `tags` — ключевые слова, по которым генератор подбирает блок под вакансию;
+   - `relevance: { pm, analyst, dev }` — оценка релевантности роли от 1 до 5.
+4. Прогони валидацию: `npx tsx scripts/validate-seed.ts` — упадёт, если что-то не по схеме.
+5. Закоммитить → push → Vercel задеплоит автоматически.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Полная схема — в [lib/schema.ts](lib/schema.ts).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Генератор резюме
 
-## Deploy on Vercel
+`POST /api/generate-resume` принимает `{ jobDescription: string }`, грузит профиль из `data/seed.json`, отправляет в Claude вместе с системным промптом из [lib/anthropic.ts](lib/anthropic.ts), получает JSON-резюме и рендерит DOCX через [lib/docx.ts](lib/docx.ts).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Получить API-ключ
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Зайти на <https://console.anthropic.com/settings/keys>, создать ключ.
+2. Положить в `.env.local`: `ANTHROPIC_API_KEY=sk-ant-...`.
+3. Перезапустить dev-сервер.
+4. На Vercel — добавить ту же переменную в Settings → Environment Variables.
+
+Стоимость одной генерации — копейки (промпт кэшируется через `cache_control`).
+
+## Деплой на Vercel
+
+1. Создать GitHub-репозиторий, запушить код.
+2. На <https://vercel.com/new> импортировать репо. Все настройки по умолчанию.
+3. В Settings → Environment Variables добавить `ANTHROPIC_API_KEY`.
+4. Каждый `git push` в `main` будет авто-деплоить.
+
+## Структура
+
+```
+.
+├── app/
+│   ├── page.tsx               # публичный лендинг
+│   ├── generate/page.tsx      # генератор резюме
+│   ├── api/generate-resume/   # POST → DOCX
+│   ├── layout.tsx
+│   └── globals.css
+├── components/
+│   ├── landing/               # секции лендинга
+│   └── generate/              # форма генератора
+├── data/
+│   └── seed.json              # ВСЕ ДАННЫЕ — правишь здесь
+├── lib/
+│   ├── schema.ts              # zod-схема + типы
+│   ├── profile.ts             # загрузчик профиля (потом → Supabase)
+│   ├── anthropic.ts           # Claude API + промпт
+│   └── docx.ts                # рендер Word-документа
+└── scripts/
+    ├── validate-seed.ts       # проверка seed против схемы
+    └── test-docx.ts           # рендер тестового DOCX без вызова Claude
+```
+
+## Дальше (когда понадобится)
+
+- **Веб-админка** — формы вместо ручного редактирования JSON. Подключить Supabase (Postgres + Auth), профиль хранить в JSONB-поле, страница `/admin` с формами по секциям.
+- **Кастомный домен** — на Vercel в Settings → Domains.
+- **Аналитика** — `npm i @vercel/analytics`, добавить компонент в `layout.tsx`.
