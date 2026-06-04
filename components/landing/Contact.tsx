@@ -1,9 +1,17 @@
 import type { Profile } from "@/lib/schema";
-import { Mail, Phone, Send, MapPin, Globe } from "lucide-react";
+import { Mail, Phone, Send, MapPin } from "lucide-react";
 import { MotionFade } from "./MotionFade";
 
+type ContactItem = {
+  icon: typeof Mail;
+  label: string;
+  value: string;
+  href?: string;
+  fullWidth?: boolean;
+};
+
 export function Contact({ personal }: { personal: Profile["personal"] }) {
-  const items = [
+  const items: ContactItem[] = [
     {
       icon: Mail,
       label: "Email",
@@ -26,18 +34,8 @@ export function Contact({ personal }: { personal: Profile["personal"] }) {
       icon: MapPin,
       label: "Город",
       value: personal.city,
-      href: undefined,
+      fullWidth: true,
     },
-    ...(personal.siteUrl
-      ? [
-          {
-            icon: Globe,
-            label: "Сайт",
-            value: personal.siteUrl.replace("https://", ""),
-            href: personal.siteUrl,
-          },
-        ]
-      : []),
   ];
 
   return (
@@ -52,11 +50,11 @@ export function Contact({ personal }: { personal: Profile["personal"] }) {
             Быстрее всего отвечу в Telegram. Можно также написать на почту — отвечу в течение дня.
           </p>
 
-          <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-            {items.map(({ icon: Icon, label, value, href }) => {
+          <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
+            {items.map(({ icon: Icon, label, value, href, fullWidth }) => {
               const Inner = (
                 <div className="flex items-center gap-4">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-accent">
+                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-background text-accent">
                     <Icon size={15} strokeWidth={1.8} />
                   </span>
                   <div>
@@ -67,18 +65,19 @@ export function Contact({ personal }: { personal: Profile["personal"] }) {
                   </div>
                 </div>
               );
+              const spanClass = fullWidth ? "sm:col-span-3" : "";
               return href ? (
                 <a
                   key={label}
                   href={href}
                   target={href.startsWith("http") ? "_blank" : undefined}
                   rel="noreferrer"
-                  className="bg-surface p-5 transition-colors hover:bg-surface-2"
+                  className={`bg-surface p-5 transition-colors hover:bg-surface-2 ${spanClass}`}
                 >
                   {Inner}
                 </a>
               ) : (
-                <div key={label} className="bg-surface p-5">
+                <div key={label} className={`bg-surface p-5 ${spanClass}`}>
                   {Inner}
                 </div>
               );

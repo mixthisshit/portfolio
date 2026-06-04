@@ -176,7 +176,7 @@
   ],
   "skills": {
     "technical": [
-      { "name": "Python", "level": "basic", "category": "Языки программирования", "tags": ["numpy", "matplotlib", "seaborn", "oop"] },
+      { "name": "Python", "level": "intermediate", "category": "Языки программирования", "tags": ["numpy", "matplotlib", "seaborn", "oop"] },
       { "name": "SQL", "level": "basic", "category": "Базы данных", "tags": ["select", "join", "group-by"] },
       { "name": "JavaScript", "level": "basic", "category": "Языки программирования", "tags": ["es6"] },
       { "name": "React", "level": "basic", "category": "Frontend", "tags": ["components", "hooks"] },
