@@ -13,13 +13,9 @@ export function Section({ id, eyebrow, title, description, children }: Props) {
   return (
     <section id={id} className="container-page scroll-mt-20 py-20 sm:py-28">
       <MotionFade>
-        <header className="mb-10 max-w-2xl">
-          {eyebrow && (
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-              {eyebrow}
-            </span>
-          )}
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+        <header className="mb-12 max-w-2xl border-t border-border pt-10">
+          {eyebrow && <span className="label-caps">{eyebrow}</span>}
+          <h2 className="mt-4 text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
             {title}
           </h2>
           {description && (

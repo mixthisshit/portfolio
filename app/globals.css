@@ -3,14 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --background: 8 10 16;
-  --foreground: 240 242 248;
-  --muted: 150 156 170;
-  --surface: 17 20 28;
-  --border: 32 36 48;
-  --accent: 124 92 255;
-  --accent-2: 56 189 248;
-  --accent-soft: 124 92 255;
+  --background: 248 244 237;
+  --foreground: 30 26 22;
+  --muted: 122 111 98;
+  --subtle: 156 144 128;
+  --surface: 255 252 247;
+  --surface-2: 240 233 222;
+  --border: 224 215 198;
+  --border-strong: 200 186 162;
+  --accent: 154 110 79;
+  --accent-soft: 219 199 174;
 }
 
 html {
@@ -19,13 +21,10 @@ html {
 
 body {
   color: rgb(var(--foreground));
-  background:
-    radial-gradient(1200px 600px at 50% -200px, rgba(124, 92, 255, 0.18), transparent 60%),
-    radial-gradient(900px 500px at 100% 10%, rgba(56, 189, 248, 0.10), transparent 60%),
-    rgb(var(--background));
-  background-attachment: fixed;
+  background: rgb(var(--background));
   font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @layer utilities {
@@ -36,23 +35,29 @@ body {
     text-wrap: pretty;
   }
   .container-page {
-    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
-  }
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-grad-accent;
+    @apply mx-auto w-full max-w-5xl px-5 sm:px-8;
   }
   .chip {
-    @apply inline-flex items-center rounded-full border border-border/80 bg-surface/60 px-3 py-1 text-xs font-medium text-muted backdrop-blur;
+    @apply inline-flex items-center rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted;
   }
   .card {
-    @apply rounded-2xl border border-border bg-surface/60 backdrop-blur transition-all duration-300;
+    @apply rounded-2xl border border-border bg-surface transition-colors duration-200;
   }
   .card-hover {
-    @apply hover:border-accent/40 hover:bg-surface/80 hover:-translate-y-0.5;
+    @apply hover:border-border-strong;
+  }
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background transition-colors hover:bg-accent;
+  }
+  .btn-outline {
+    @apply inline-flex items-center gap-2 rounded-full border border-border bg-surface px-5 py-3 text-sm font-medium text-foreground transition-colors hover:border-border-strong;
+  }
+  .label-caps {
+    @apply text-[11px] font-medium uppercase tracking-[0.16em] text-subtle;
   }
 }
 
 ::selection {
-  background: rgba(124, 92, 255, 0.4);
+  background: rgb(var(--accent-soft));
   color: rgb(var(--foreground));
 }

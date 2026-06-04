@@ -23,14 +23,14 @@ export function Nav({ name }: { name: string }) {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+      className={`sticky top-0 z-50 w-full transition-colors duration-300 ${
         scrolled
-          ? "border-b border-border/60 bg-background/70 backdrop-blur-md"
-          : "border-b border-transparent bg-transparent"
+          ? "border-b border-border bg-background/85 backdrop-blur"
+          : "border-b border-transparent"
       }`}
     >
       <div className="container-page flex h-16 items-center justify-between gap-6">
-        <a href="#top" className="text-sm font-semibold tracking-tight text-foreground">
+        <a href="#top" className="text-sm font-medium tracking-tight text-foreground">
           {name}
         </a>
         <nav className="hidden gap-7 text-sm text-muted md:flex">
@@ -46,7 +46,7 @@ export function Nav({ name }: { name: string }) {
         </nav>
         <a
           href="#contact"
-          className="rounded-full bg-grad-accent px-4 py-2 text-xs font-semibold text-white shadow-card transition-transform hover:scale-[1.02]"
+          className="rounded-full border border-border bg-surface px-4 py-2 text-xs font-medium text-foreground transition-colors hover:border-border-strong"
         >
           Связаться
         </a>

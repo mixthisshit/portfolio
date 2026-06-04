@@ -12,14 +12,12 @@ export default function GeneratePage() {
   return (
     <main className="min-h-screen">
       <Nav name={profile.personal.shortName} />
-      <section className="container-page py-16 sm:py-24">
-        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-          Внутренний инструмент
-        </span>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+      <section className="container-page py-20 sm:py-28">
+        <span className="label-caps">Внутренний инструмент</span>
+        <h1 className="mt-4 text-3xl font-medium tracking-tight sm:text-4xl">
           Генератор резюме под вакансию
         </h1>
-        <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted text-pretty">
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted text-pretty">
           Вставь описание вакансии. Claude выберет релевантные блоки из твоего профиля,
           переформулирует буллеты под язык вакансии и соберёт .docx — открыть в Word
           и подправить вручную, если нужно.

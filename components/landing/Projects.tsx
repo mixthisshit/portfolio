@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Profile, ProjectItem } from "@/lib/schema";
 import { MotionFade } from "./MotionFade";
-import { ExternalLink, Github } from "lucide-react";
+import { ArrowUpRight, Github } from "lucide-react";
 
 const CATEGORIES: { key: ProjectItem["category"] | "all"; label: string }[] = [
   { key: "all", label: "Все" },
@@ -25,52 +25,52 @@ export function Projects({ projects }: { projects: Profile["projects"] }) {
   return (
     <section id="projects" className="container-page scroll-mt-20 py-20 sm:py-28">
       <MotionFade>
-        <header className="mb-8 flex flex-wrap items-end justify-between gap-6">
-          <div className="max-w-2xl">
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-              Проекты
-            </span>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Pet- и учебные проекты
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-muted text-pretty">
-              Мини-исследования, прототипы и эссе, которые я делал в свободное и учебное время.
-            </p>
+        <div className="mb-12 border-t border-border pt-10">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div className="max-w-2xl">
+              <span className="label-caps">Проекты</span>
+              <h2 className="mt-4 text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
+                Pet- и учебные проекты
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-muted text-pretty">
+                Мини-исследования, прототипы и эссе, которые делал в свободное и учебное время.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {CATEGORIES.map((c) => {
+                const count =
+                  c.key === "all"
+                    ? projects.length
+                    : projects.filter((p) => p.category === c.key).length;
+                if (c.key !== "all" && count === 0) return null;
+                return (
+                  <button
+                    key={c.key}
+                    onClick={() => setFilter(c.key)}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      filter === c.key
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border bg-surface text-muted hover:border-border-strong hover:text-foreground"
+                    }`}
+                  >
+                    {c.label} <span className="opacity-60">· {count}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((c) => {
-              const count =
-                c.key === "all"
-                  ? projects.length
-                  : projects.filter((p) => p.category === c.key).length;
-              if (c.key !== "all" && count === 0) return null;
-              return (
-                <button
-                  key={c.key}
-                  onClick={() => setFilter(c.key)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                    filter === c.key
-                      ? "border-accent/70 bg-accent/10 text-foreground"
-                      : "border-border bg-surface/40 text-muted hover:text-foreground"
-                  }`}
-                >
-                  {c.label} {count > 0 && <span className="opacity-60">· {count}</span>}
-                </button>
-              );
-            })}
-          </div>
-        </header>
+        </div>
       </MotionFade>
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
         {visible.map((p, i) => (
           <MotionFade key={p.id} delay={i * 0.04}>
-            <article className="card card-hover flex h-full flex-col gap-4 p-6">
+            <article className="group flex h-full flex-col gap-4 bg-surface p-6">
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-base font-semibold tracking-tight text-foreground">
+                <h3 className="text-[15px] font-medium tracking-tight text-foreground">
                   {p.name}
                 </h3>
-                <div className="flex gap-2">
+                <div className="flex gap-2 opacity-60 transition-opacity group-hover:opacity-100">
                   {p.url && (
                     <a
                       href={p.url}
@@ -79,7 +79,7 @@ export function Projects({ projects }: { projects: Profile["projects"] }) {
                       className="text-muted transition-colors hover:text-accent"
                       aria-label="Открыть проект"
                     >
-                      <ExternalLink size={16} />
+                      <ArrowUpRight size={16} strokeWidth={1.8} />
                     </a>
                   )}
                   {p.repoUrl && (
@@ -90,7 +90,7 @@ export function Projects({ projects }: { projects: Profile["projects"] }) {
                       className="text-muted transition-colors hover:text-accent"
                       aria-label="Код на GitHub"
                     >
-                      <Github size={16} />
+                      <Github size={15} strokeWidth={1.8} />
                     </a>
                   )}
                 </div>
@@ -99,13 +99,13 @@ export function Projects({ projects }: { projects: Profile["projects"] }) {
                 {p.description}
               </p>
               {p.stack.length > 0 && (
-                <div className="mt-auto flex flex-wrap gap-1.5 pt-2">
-                  {p.stack.slice(0, 5).map((s) => (
-                    <span
-                      key={s}
-                      className="rounded-md border border-border/60 bg-background/40 px-2 py-0.5 text-[11px] text-muted"
-                    >
+                <div className="mt-auto flex flex-wrap gap-1.5 pt-2 text-[11px] text-subtle">
+                  {p.stack.slice(0, 5).map((s, idx) => (
+                    <span key={s}>
                       {s}
+                      {idx < p.stack.slice(0, 5).length - 1 && (
+                        <span className="ml-1.5 opacity-50">·</span>
+                      )}
                     </span>
                   ))}
                 </div>

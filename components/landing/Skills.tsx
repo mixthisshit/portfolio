@@ -27,27 +27,25 @@ export function Skills({ skills }: { skills: Profile["skills"] }) {
       title="Чем владею"
       description="Базовый, но рабочий стек продуктового аналитика — от исследований и SQL до прототипов и автоматизации."
     >
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-x-12 gap-y-12 md:grid-cols-2">
         {Object.entries(grouped).map(([category, items], idx) => (
-          <MotionFade key={category} delay={idx * 0.05}>
-            <article className="card p-6">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-accent">
-                {category}
-              </h3>
+          <MotionFade key={category} delay={idx * 0.04}>
+            <article>
+              <h3 className="label-caps border-b border-border pb-3">{category}</h3>
               <ul className="mt-4 space-y-3">
                 {items.map((s) => (
                   <li
                     key={s.name}
-                    className="flex items-center justify-between gap-3 text-sm"
+                    className="flex items-center justify-between gap-3 text-[15px]"
                   >
-                    <span className="font-medium text-foreground">{s.name}</span>
+                    <span className="text-foreground">{s.name}</span>
                     <span className="flex items-center gap-2 text-xs text-muted">
                       {LEVEL_LABEL[s.level]}
                       <span className="flex gap-1">
                         {[1, 2, 3].map((d) => (
                           <span
                             key={d}
-                            className={`h-1.5 w-1.5 rounded-full ${
+                            className={`h-1 w-3 rounded-full ${
                               d <= LEVEL_DOTS[s.level]
                                 ? "bg-accent"
                                 : "bg-border"
@@ -64,11 +62,9 @@ export function Skills({ skills }: { skills: Profile["skills"] }) {
         ))}
 
         <MotionFade delay={0.2}>
-          <article className="card p-6 md:col-span-2">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-accent">
-              Soft skills
-            </h3>
-            <div className="mt-4 flex flex-wrap gap-2">
+          <article className="md:col-span-2">
+            <h3 className="label-caps border-b border-border pb-3">Soft skills</h3>
+            <div className="mt-4 flex flex-wrap gap-1.5">
               {skills.soft.map((s) => (
                 <span key={s} className="chip">
                   {s}

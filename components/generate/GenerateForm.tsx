@@ -51,21 +51,19 @@ export function GenerateForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <label className="block">
-        <span className="text-xs font-semibold uppercase tracking-wider text-accent">
-          Описание вакансии
-        </span>
+        <span className="label-caps">Описание вакансии</span>
         <textarea
           value={jd}
           onChange={(e) => setJd(e.target.value)}
           placeholder="Скопируй полное описание вакансии с hh.ru, Хабр Карьеры или сайта компании — чем подробнее, тем точнее подбор..."
           rows={14}
-          className="mt-2 w-full rounded-2xl border border-border bg-surface/60 px-4 py-3 text-sm leading-relaxed text-foreground placeholder:text-muted focus:border-accent/60 focus:outline-none"
+          className="mt-3 w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm leading-relaxed text-foreground placeholder:text-subtle focus:border-border-strong focus:outline-none"
           disabled={loading}
           required
           minLength={30}
         />
-        <span className="mt-1 block text-xs text-muted">
-          Минимум 30 символов. Сейчас: {jd.length}
+        <span className="mt-2 block text-xs text-subtle">
+          Минимум 30 символов · Сейчас: {jd.length}
         </span>
       </label>
 
@@ -73,7 +71,7 @@ export function GenerateForm() {
         <button
           type="submit"
           disabled={loading || jd.trim().length < 30}
-          className="inline-flex items-center gap-2 rounded-full bg-grad-accent px-6 py-3 text-sm font-semibold text-white shadow-card transition-transform enabled:hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60"
+          className="btn-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
             <>
@@ -93,10 +91,10 @@ export function GenerateForm() {
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
+        <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800">
           <strong>Ошибка:</strong> {error}
           {error.includes("ANTHROPIC_API_KEY") && (
-            <p className="mt-2 text-red-200/80">
+            <p className="mt-2 text-red-700">
               Добавь ключ в файл <code className="font-mono">.env.local</code> в корне проекта и
               перезапусти dev-сервер.
             </p>

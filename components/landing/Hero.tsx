@@ -5,66 +5,56 @@ import { MotionFade } from "./MotionFade";
 export function Hero({ profile }: { profile: Profile }) {
   const { personal, summary, highlights } = profile;
   return (
-    <section id="top" className="container-page relative pt-16 pb-12 sm:pt-24 sm:pb-20">
+    <section id="top" className="container-page relative pt-20 pb-16 sm:pt-32 sm:pb-24">
       <MotionFade>
         <span className="chip">
           <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-accent" />
-          Открыт к стажировкам и фуллтайму — {personal.city}
+          Открыт к стажировкам и фуллтайму · {personal.city}
         </span>
       </MotionFade>
 
-      <MotionFade delay={0.1}>
-        <h1 className="mt-6 text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
-          {personal.shortName.split(" ")[0]}{" "}
-          <span className="text-gradient">{personal.shortName.split(" ")[1]}</span>
-          <span className="block text-2xl font-medium text-muted sm:text-3xl mt-3">
-            {personal.title}
-          </span>
+      <MotionFade delay={0.08}>
+        <h1 className="mt-8 text-balance text-5xl font-medium leading-[1.04] tracking-tight text-foreground sm:text-6xl">
+          {personal.shortName}
         </h1>
+        <p className="mt-4 text-xl font-normal text-muted sm:text-2xl">
+          {personal.title}
+        </p>
       </MotionFade>
 
       <MotionFade delay={0.15}>
-        <p className="mt-6 max-w-2xl text-pretty text-base leading-relaxed text-muted sm:text-lg">
+        <p className="mt-8 max-w-2xl text-pretty text-base leading-relaxed text-muted sm:text-[17px]">
           {summary}
         </p>
       </MotionFade>
 
       <MotionFade delay={0.2}>
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <a
-            href="#cases"
-            className="inline-flex items-center gap-2 rounded-full bg-grad-accent px-5 py-3 text-sm font-semibold text-white shadow-card transition-transform hover:scale-[1.02]"
-          >
-            Смотреть кейсы <ArrowRight size={16} />
+        <div className="mt-10 flex flex-wrap items-center gap-3">
+          <a href="#cases" className="btn-primary">
+            Смотреть кейсы <ArrowRight size={15} strokeWidth={1.8} />
           </a>
-          <a
-            href={`mailto:${personal.email}`}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/60 px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:border-accent/60"
-          >
-            <Mail size={16} /> {personal.email}
+          <a href={`mailto:${personal.email}`} className="btn-outline">
+            <Mail size={15} strokeWidth={1.8} /> {personal.email}
           </a>
           <a
             href={`https://t.me/${personal.telegram.replace("@", "")}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/60 px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:border-accent/60"
+            className="btn-outline"
           >
-            <Send size={16} /> {personal.telegram}
+            <Send size={15} strokeWidth={1.8} /> {personal.telegram}
           </a>
         </div>
       </MotionFade>
 
       <MotionFade delay={0.3}>
-        <ul className="mt-14 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-16 grid grid-cols-1 gap-x-10 gap-y-5 border-t border-border pt-10 sm:grid-cols-2">
           {highlights.slice(0, 6).map((h, i) => (
-            <li
-              key={i}
-              className="card card-hover flex items-start gap-3 p-4 text-sm text-foreground/90"
-            >
-              <span className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-grad-accent text-[10px] font-bold text-white">
-                {i + 1}
+            <li key={i} className="flex items-baseline gap-4 text-[15px] text-foreground/90">
+              <span className="font-mono text-xs text-subtle tabular-nums">
+                0{i + 1}
               </span>
-              <span className="text-pretty">{h}</span>
+              <span className="text-pretty leading-relaxed">{h}</span>
             </li>
           ))}
         </ul>
