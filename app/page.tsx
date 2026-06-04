@@ -9,8 +9,10 @@ import { Education } from "@/components/landing/Education";
 import { Activities } from "@/components/landing/Activities";
 import { Contact } from "@/components/landing/Contact";
 
-export default function Home() {
-  const profile = getProfile();
+export const revalidate = 60; // ISR: обновлять данные раз в минуту
+
+export default async function Home() {
+  const profile = await getProfile();
 
   return (
     <main className="min-h-screen">

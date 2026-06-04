@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const profile = getProfile();
+    const profile = await getProfile();
     const generated = await generateResume({
       profile,
       jobDescription,

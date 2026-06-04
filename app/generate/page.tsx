@@ -7,8 +7,8 @@ export const metadata = {
   description: "Сборка резюме под конкретную вакансию",
 };
 
-export default function GeneratePage() {
-  const profile = getProfile();
+export default async function GeneratePage() {
+  const profile = await getProfile();
   return (
     <main className="min-h-screen">
       <Nav name={profile.personal.shortName} />

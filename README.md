@@ -83,8 +83,27 @@ npm run dev
     └── test-docx.ts           # рендер тестового DOCX без вызова Claude
 ```
 
+## Веб-админка (Supabase)
+
+Профиль можно править через `/admin` — JSON-редактор с zod-валидацией, защищён логином.
+
+### Первый запуск (один раз)
+1. Создать проект на <https://supabase.com>, скопировать в `.env.local`:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+2. В Supabase Dashboard → **SQL Editor** → запустить содержимое [supabase/migrations/0001_init.sql](supabase/migrations/0001_init.sql).
+3. Залить начальный профиль: `npx tsx scripts/seed-supabase.ts`
+4. В Supabase Dashboard → **Authentication → Users → Add user** — создать админский аккаунт (email + пароль).
+5. Эти же 3 переменных добавить в Vercel → Settings → Environment Variables и нажать Redeploy.
+
+### Как пользоваться
+- Зайти на `/admin/login` → ввести email/пароль → попадёшь в `/admin`.
+- Поправить JSON → **Сохранить** → данные уходят в Supabase, кэш публичных страниц сбрасывается.
+- Сайт читает данные из Supabase с ISR-кэшем (60 секунд). Если БД недоступна — фолбэк на `data/seed.json`.
+
 ## Дальше (когда понадобится)
 
-- **Веб-админка** — формы вместо ручного редактирования JSON. Подключить Supabase (Postgres + Auth), профиль хранить в JSONB-поле, страница `/admin` с формами по секциям.
+- **Формы вместо JSON** — `/admin` с раздельными формами по секциям (personal, cases, projects и т.д.).
 - **Кастомный домен** — на Vercel в Settings → Domains.
 - **Аналитика** — `npm i @vercel/analytics`, добавить компонент в `layout.tsx`.
