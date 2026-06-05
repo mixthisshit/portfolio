@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Profile, ProjectItem } from "@/lib/schema";
 import { MotionFade } from "./MotionFade";
-import { ArrowUpRight, Github } from "lucide-react";
+import { ArrowUpRight, Github, FileText, FileImage, FileArchive, File as FileIcon } from "lucide-react";
 
 const CATEGORIES: { key: ProjectItem["category"] | "all"; label: string }[] = [
   { key: "all", label: "Все" },
@@ -13,6 +13,23 @@ const CATEGORIES: { key: ProjectItem["category"] | "all"; label: string }[] = [
   { key: "research", label: "Research" },
   { key: "academic", label: "Учебные" },
 ];
+
+const FILE_ICON: Record<string, typeof FileText> = {
+  pdf: FileText,
+  doc: FileText,
+  docx: FileText,
+  pptx: FileText,
+  xlsx: FileText,
+  txt: FileText,
+  md: FileText,
+  png: FileImage,
+  jpg: FileImage,
+  jpeg: FileImage,
+  webp: FileImage,
+  gif: FileImage,
+  svg: FileImage,
+  zip: FileArchive,
+};
 
 export function Projects({ projects }: { projects: Profile["projects"] }) {
   const [filter, setFilter] = useState<(typeof CATEGORIES)[number]["key"]>("all");
@@ -98,6 +115,27 @@ export function Projects({ projects }: { projects: Profile["projects"] }) {
               <p className="text-sm leading-relaxed text-muted text-pretty">
                 {p.description}
               </p>
+              {p.files.length > 0 && (
+                <ul className="space-y-1">
+                  {p.files.map((f) => {
+                    const Icon = FILE_ICON[f.ext] ?? FileIcon;
+                    const href = `/api/content-file/projects/${p.id}/${encodeURIComponent(f.name)}`;
+                    return (
+                      <li key={f.name}>
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2 text-xs text-foreground transition-colors hover:text-accent"
+                        >
+                          <Icon size={13} strokeWidth={1.8} className="shrink-0 text-subtle" />
+                          <span className="truncate">{f.name}</span>
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
               {p.stack.length > 0 && (
                 <div className="mt-auto flex flex-wrap gap-1.5 pt-2 text-[11px] text-subtle">
                   {p.stack.slice(0, 5).map((s, idx) => (

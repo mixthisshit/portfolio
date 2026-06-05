@@ -9,7 +9,7 @@ export function Hero({ profile }: { profile: Profile }) {
       <MotionFade>
         <span className="chip">
           <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-accent" />
-          Открыт к стажировкам и фуллтайму · {personal.city}
+          Открыт к предложениям о работе и стажировках · {personal.city}
         </span>
       </MotionFade>
 
@@ -19,6 +19,9 @@ export function Hero({ profile }: { profile: Profile }) {
         </h1>
         <p className="mt-4 text-xl font-normal text-muted sm:text-2xl">
           {personal.title}
+        </p>
+        <p className="mt-1 text-sm font-normal text-subtle sm:text-base">
+          Project Manager / Business Analyst
         </p>
       </MotionFade>
 

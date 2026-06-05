@@ -7,8 +7,8 @@ export function About({ profile }: { profile: Profile }) {
     <Section
       id="about"
       eyebrow="О себе"
-      title="Продуктовое мышление через данные и гипотезы"
-      description="Учусь на Инноватике в ИТМО. Большая часть моего практического опыта — командные продуктовые кейсы: исследования, гипотезы, метрики и решения. Двигаю в сторону Product / Product Analytics."
+      title="Кто я и чем занимаюсь"
+      description="Учусь на Инноватике в ИТМО. Большая часть моего практического опыта — командные продуктовые кейсы: исследования, гипотезы, метрики и решения. Двигаю в сторону Product Manager."
     >
       <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-3">
         <MotionFade>
@@ -42,9 +42,9 @@ export function About({ profile }: { profile: Profile }) {
           <article className="h-full bg-surface p-7">
             <h3 className="label-caps">Куда смотрю</h3>
             <p className="mt-5 text-[15px] leading-relaxed text-foreground/90 text-pretty">
-              Product Manager / Product Analyst в продуктовых компаниях. Интересны
-              финтех, B2B SaaS, AI-продукты. Делать решения на стыке исследований,
-              аналитики и быстрого прототипирования.
+              Product Manager в продуктовых компаниях. Интересны финтех, B2B SaaS,
+              AI-продукты. Делать решения на стыке исследований, аналитики и
+              быстрого прототипирования.
             </p>
           </article>
         </MotionFade>
