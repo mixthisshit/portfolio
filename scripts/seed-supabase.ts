@@ -9,7 +9,7 @@
  */
 import { createClient } from "@supabase/supabase-js";
 import { config } from "dotenv";
-import { ProfileSchema } from "../lib/schema";
+import { StoredProfileSchema } from "../lib/schema";
 import seed from "../data/seed.json";
 
 config({ path: ".env.local" });
@@ -23,9 +23,9 @@ if (!url || !serviceKey) {
 }
 
 (async () => {
-  const parsed = ProfileSchema.safeParse(seed);
+  const parsed = StoredProfileSchema.safeParse(seed);
   if (!parsed.success) {
-    console.error("❌ seed.json не проходит валидацию:");
+    console.error("❌ seed.json не проходит StoredProfileSchema:");
     console.error(JSON.stringify(parsed.error.format(), null, 2));
     process.exit(1);
   }
@@ -45,7 +45,8 @@ if (!url || !serviceKey) {
   }
 
   console.log("✅ Профиль залит в Supabase (id=default)");
-  console.log(`   - кейсов: ${parsed.data.cases.length}`);
-  console.log(`   - проектов: ${parsed.data.projects.length}`);
   console.log(`   - технических навыков: ${parsed.data.skills.technical.length}`);
+  console.log(`   - soft skills: ${parsed.data.skills.soft.length}`);
+  console.log(`   - активностей: ${parsed.data.activities.length}`);
+  console.log("ℹ️  Кейсы и проекты теперь в content/, не в Supabase.");
 })();

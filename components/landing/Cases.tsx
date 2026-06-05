@@ -1,6 +1,7 @@
 import type { Profile } from "@/lib/schema";
 import { Section } from "./Section";
 import { MotionFade } from "./MotionFade";
+import { AttachedFiles } from "./AttachedFiles";
 
 export function Cases({ profile }: { profile: Profile }) {
   if (!profile.cases.length) return null;
@@ -47,7 +48,7 @@ export function Cases({ profile }: { profile: Profile }) {
 
                   <div className="mt-8 label-caps">Что сделал</div>
                   <ul className="mt-3 space-y-2.5 text-[15px] text-foreground/90">
-                    {c.bullets.map((b, i) => (
+                    {c.whatIDid.map((b, i) => (
                       <li key={i} className="flex gap-3">
                         <span className="mt-2 inline-block h-1 w-1 shrink-0 rounded-full bg-accent" />
                         <span className="text-pretty leading-relaxed">{b}</span>
@@ -86,6 +87,8 @@ export function Cases({ profile }: { profile: Profile }) {
                       ))}
                     </div>
                   </div>
+
+                  <AttachedFiles files={c.files} type="case" slug={c.id} />
                 </aside>
               </div>
             </article>

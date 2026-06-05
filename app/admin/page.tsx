@@ -1,13 +1,31 @@
 import { ProfileEditor } from "@/components/admin/ProfileEditor";
-import { getProfile } from "@/lib/profile";
+import { StoredProfileSchema } from "@/lib/schema";
+import { createSupabaseAdmin, hasSupabaseConfig } from "@/lib/supabase/server";
+import seed from "@/data/seed.json";
 import { signOut } from "./actions";
 
 export const metadata = { title: "Админка — Профиль" };
 export const dynamic = "force-dynamic";
 
+async function loadStored() {
+  if (hasSupabaseConfig()) {
+    const supabase = createSupabaseAdmin();
+    const { data } = await supabase
+      .from("profile")
+      .select("data")
+      .eq("id", "default")
+      .maybeSingle();
+    if (data?.data) {
+      const parsed = StoredProfileSchema.safeParse(data.data);
+      if (parsed.success) return parsed.data;
+    }
+  }
+  return StoredProfileSchema.parse(seed);
+}
+
 export default async function AdminPage() {
-  const profile = await getProfile();
-  const initialJson = JSON.stringify(profile, null, 2);
+  const stored = await loadStored();
+  const initialJson = JSON.stringify(stored, null, 2);
 
   return (
     <main className="container-page py-12 sm:py-16">
@@ -18,8 +36,8 @@ export default async function AdminPage() {
             Профиль
           </h1>
           <p className="mt-1 text-sm text-muted">
-            Меняй JSON, сохраняй — сайт обновится через минуту (ISR кэш).
-            Валидируется по zod-схеме перед записью.
+            Личное, скиллы, образование, активности. Кейсы/проекты/стажировки/хакатоны
+            живут в папке <code className="font-mono text-xs">content/</code> и правятся через git.
           </p>
         </div>
         <form action={signOut}>

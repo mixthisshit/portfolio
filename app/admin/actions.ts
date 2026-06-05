@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
-import { ProfileSchema } from "@/lib/schema";
+import { StoredProfileSchema } from "@/lib/schema";
 
 export type SaveResult = { ok: true } | { ok: false; error: string };
 
@@ -29,8 +29,8 @@ export async function saveProfile(jsonString: string): Promise<SaveResult> {
     return { ok: false, error: `Невалидный JSON: ${(e as Error).message}` };
   }
 
-  // Валидация по zod-схеме.
-  const validated = ProfileSchema.safeParse(parsed);
+  // Валидация по zod-схеме (только то, что хранится в Supabase).
+  const validated = StoredProfileSchema.safeParse(parsed);
   if (!validated.success) {
     return {
       ok: false,

@@ -7,6 +7,8 @@ import { Projects } from "@/components/landing/Projects";
 import { Skills } from "@/components/landing/Skills";
 import { Education } from "@/components/landing/Education";
 import { Activities } from "@/components/landing/Activities";
+import { Internships } from "@/components/landing/Internships";
+import { Hackathons } from "@/components/landing/Hackathons";
 import { Contact } from "@/components/landing/Contact";
 
 export const revalidate = 60; // ISR: обновлять данные раз в минуту
@@ -20,6 +22,8 @@ export default async function Home() {
       <Hero profile={profile} />
       <About profile={profile} />
       <Cases profile={profile} />
+      <Internships internships={profile.internships} />
+      <Hackathons hackathons={profile.hackathons} />
       <Projects projects={profile.projects} />
       <Skills skills={profile.skills} />
       <Education profile={profile} />

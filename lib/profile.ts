@@ -1,17 +1,15 @@
 import seed from "@/data/seed.json";
-import { ProfileSchema, type Profile } from "./schema";
+import { StoredProfileSchema, ProfileSchema, type Profile, type StoredProfile } from "./schema";
 import { createSupabaseAdmin, hasSupabaseConfig } from "./supabase/server";
+import { loadContent } from "./content";
 
 const PROFILE_ID = "default";
 
 /**
- * Загружает профиль для рендера сайта.
- * 1. Если Supabase настроен — читает из таблицы `profile`.
- * 2. Если БД пустая / ошибка / Supabase не настроен — отдаёт seed.json.
- *
- * Кэшируется на уровне ISR (см. revalidate в page.tsx).
+ * Часть профиля, которая хранится в Supabase / seed.json: personal, summary,
+ * highlights, education, skills, courses, languages, activities, awards.
  */
-export async function getProfile(): Promise<Profile> {
+async function getStoredProfile(): Promise<StoredProfile> {
   if (hasSupabaseConfig()) {
     try {
       const supabase = createSupabaseAdmin();
@@ -22,25 +20,50 @@ export async function getProfile(): Promise<Profile> {
         .maybeSingle();
 
       if (!error && data?.data) {
-        return ProfileSchema.parse(data.data);
-      }
-      if (error) {
-        console.warn("[profile] supabase read error, falling back to seed:", error.message);
+        const parsed = StoredProfileSchema.safeParse(data.data);
+        if (parsed.success) return parsed.data;
+        console.warn(
+          "[profile] supabase data не проходит StoredProfileSchema, fallback to seed:",
+          parsed.error.message,
+        );
+      } else if (error) {
+        console.warn(
+          "[profile] supabase read error, fallback to seed:",
+          error.message,
+        );
       }
     } catch (e) {
       console.warn(
-        "[profile] supabase fetch threw, falling back to seed:",
+        "[profile] supabase fetch threw, fallback to seed:",
         (e as Error).message,
       );
     }
   }
-  return ProfileSchema.parse(seed);
+  return StoredProfileSchema.parse(seed);
 }
 
 /**
- * Синхронная версия — только для seed.json. Используется в layout metadata,
- * где async недоступен.
+ * Полный профиль = StoredProfile (Supabase) + content/ (cases, projects,
+ * internships, hackathons). Используется сайтом и генератором резюме.
  */
-export function getProfileFromSeed(): Profile {
-  return ProfileSchema.parse(seed);
+export async function getProfile(): Promise<Profile> {
+  const [stored, content] = await Promise.all([
+    getStoredProfile(),
+    Promise.resolve(loadContent()),
+  ]);
+  return ProfileSchema.parse({
+    ...stored,
+    cases: content.cases,
+    projects: content.projects,
+    internships: content.internships,
+    hackathons: content.hackathons,
+  });
+}
+
+/**
+ * Синхронная версия для метаданных в layout.tsx — только из seed.json,
+ * без обращения к БД и файловой системе.
+ */
+export function getStoredFromSeed(): StoredProfile {
+  return StoredProfileSchema.parse(seed);
 }
