@@ -49,8 +49,11 @@ export function GenerateForm() {
 
       const blob = await res.blob();
       const disposition = res.headers.get("Content-Disposition") ?? "";
-      const filenameMatch = disposition.match(/filename="([^"]+)"/);
-      const filename = filenameMatch?.[1] ?? `resume-${Date.now()}.docx`;
+      const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+      const asciiMatch = disposition.match(/filename="([^"]+)"/i);
+      const filename = utf8Match
+        ? decodeURIComponent(utf8Match[1])
+        : (asciiMatch?.[1] ?? `resume-${Date.now()}.docx`);
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -213,10 +216,11 @@ export function GenerateForm() {
       {error && (
         <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800">
           <strong>Ошибка:</strong> {error}
-          {error.includes("ANTHROPIC_API_KEY") && (
+          {(error.includes("OPENROUTER_API_KEY") || error.includes("ANTHROPIC_API_KEY")) && (
             <p className="mt-2 text-red-700">
-              Добавь ключ в файл <code className="font-mono">.env.local</code> в корне проекта и
-              перезапусти dev-сервер.
+              Положи <code className="font-mono">OPENROUTER_API_KEY</code> или{" "}
+              <code className="font-mono">ANTHROPIC_API_KEY</code> в файл{" "}
+              <code className="font-mono">.env.local</code> и перезапусти dev-сервер.
             </p>
           )}
         </div>

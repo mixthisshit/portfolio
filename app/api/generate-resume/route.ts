@@ -62,24 +62,27 @@ export async function POST(req: NextRequest) {
     });
     const buffer = await renderResumeDocx(generated);
 
-    const slug = profile.personal.fullName
-      .toLowerCase()
-      .replace(/[^a-zа-я0-9]+/gi, "-")
-      .replace(/(^-|-$)/g, "");
-    const filename = `resume-${slug}-${Date.now()}.docx`;
+    // Имя файла. Юникод-вариант для современных браузеров (RFC 5987),
+    // ASCII-фолбэк для старых клиентов. Без этого Node fetch отказывается
+    // ставить Cyrillic в Content-Disposition.
+    const ts = Date.now();
+    const utf8Name = `Резюме ${profile.personal.shortName} ${ts}.docx`;
+    const asciiName = `resume-${ts}.docx`;
+    const contentDisposition = `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(utf8Name)}`;
 
     return new NextResponse(buffer as unknown as BodyInit, {
       status: 200,
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Disposition": contentDisposition,
         "Content-Length": String(buffer.length),
       },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Неизвестная ошибка";
-    console.error("[generate-resume]", err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    console.error("[generate-resume]", message, "\n", stack);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

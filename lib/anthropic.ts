@@ -1,4 +1,8 @@
-import Anthropic from "@anthropic-ai/sdk";
+/**
+ * Сборка резюме под вакансию через LLM.
+ * Имя файла историческое — провайдер выбирается в lib/llm.ts (OpenRouter | Anthropic).
+ */
+import { callLLM } from "./llm";
 import type { Profile } from "./schema";
 
 export type GeneratedResume = {
@@ -19,8 +23,6 @@ export type GenerateInput = {
   templateText?: string;
   templateFilename?: string;
 };
-
-const MODEL = "claude-sonnet-4-5-20250929";
 
 const SYSTEM_PROMPT = `Ты ассистент, который собирает русскоязычное резюме под конкретную вакансию.
 
@@ -68,13 +70,7 @@ const SYSTEM_PROMPT = `Ты ассистент, который собирает 
 }`;
 
 export async function generateResume(input: GenerateInput): Promise<GeneratedResume> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error("ANTHROPIC_API_KEY не задан в .env.local");
-  }
-
   const { profile, jobDescription, userWishes, templateText, templateFilename } = input;
-  const client = new Anthropic({ apiKey });
 
   const wishesBlock = userWishes?.trim()
     ? `## Пожелания пользователя к этому конкретному резюме:\n${userWishes.trim()}`
@@ -101,35 +97,17 @@ ${templateBlock}
 
 Собери резюме под эту вакансию по правилам system-промпта. Верни только JSON.`;
 
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 4096,
-    system: [
-      {
-        type: "text",
-        text: SYSTEM_PROMPT,
-        cache_control: { type: "ephemeral" },
-      },
-    ],
-    messages: [{ role: "user", content: userMessage }],
-  });
-
-  const textBlock = response.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("Claude не вернул текстовый ответ");
-  }
-
-  const raw = textBlock.text.trim();
+  const raw = (await callLLM({ system: SYSTEM_PROMPT, userMessage })).trim();
   const jsonStart = raw.indexOf("{");
   const jsonEnd = raw.lastIndexOf("}");
   if (jsonStart === -1 || jsonEnd === -1) {
-    throw new Error("В ответе Claude не найден JSON");
+    throw new Error("В ответе LLM не найден JSON");
   }
 
   const jsonStr = raw.slice(jsonStart, jsonEnd + 1);
   try {
     return JSON.parse(jsonStr) as GeneratedResume;
   } catch (e) {
-    throw new Error(`Не удалось распарсить JSON от Claude: ${(e as Error).message}`);
+    throw new Error(`Не удалось распарсить JSON от LLM: ${(e as Error).message}`);
   }
 }
