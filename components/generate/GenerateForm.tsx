@@ -146,14 +146,14 @@ export function GenerateForm() {
       <div>
         <span className="label-caps">Шаблон резюме (опционально)</span>
         <p className="mt-2 text-xs text-subtle">
-          Приложи .docx, .txt или .md — Claude повторит структуру и стиль шаблона, но факты возьмёт из твоего профиля.
+          Приложи .pdf, .docx, .txt или .md — Claude повторит структуру и стиль шаблона, но факты возьмёт из твоего профиля.
         </p>
 
         <div className="mt-3">
           <input
             ref={fileInputRef}
             type="file"
-            accept=".docx,.txt,.md"
+            accept=".pdf,.docx,.txt,.md"
             onChange={onPickFile}
             disabled={loading}
             className="hidden"
