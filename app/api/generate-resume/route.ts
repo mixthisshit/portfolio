@@ -1,52 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProfile } from "@/lib/profile";
 import { generateResume } from "@/lib/anthropic";
-import { renderResumeDocx } from "@/lib/docx";
-import { extractTemplate } from "@/lib/extract-template";
+import { getTemplate, DEFAULT_TEMPLATE_ID } from "@/lib/resume-templates";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  const contentType = req.headers.get("content-type") ?? "";
-
-  let jobDescription = "";
-  let userWishes = "";
-  let templateText: string | undefined;
-  let templateFilename: string | undefined;
-
+  let body: { jobDescription?: string; userWishes?: string; templateId?: string };
   try {
-    if (contentType.startsWith("multipart/form-data")) {
-      const form = await req.formData();
-      jobDescription = String(form.get("jobDescription") ?? "").trim();
-      userWishes = String(form.get("userWishes") ?? "").trim();
-
-      const file = form.get("template") as File | null;
-      if (file && typeof file === "object" && "arrayBuffer" in file && file.size > 0) {
-        const extracted = await extractTemplate(file);
-        templateText = extracted.text;
-        templateFilename = extracted.filename;
-      }
-    } else if (contentType.startsWith("application/json")) {
-      const body = await req.json();
-      jobDescription = String(body.jobDescription ?? "").trim();
-      userWishes = String(body.userWishes ?? "").trim();
-    } else {
-      return NextResponse.json(
-        { error: `Неподдерживаемый Content-Type: ${contentType}` },
-        { status: 400 },
-      );
-    }
-  } catch (err) {
-    return NextResponse.json(
-      { error: `Не удалось разобрать запрос: ${(err as Error).message}` },
-      { status: 400 },
-    );
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Невалидный JSON в теле запроса" }, { status: 400 });
   }
+
+  const jobDescription = (body.jobDescription ?? "").trim();
+  const userWishes = (body.userWishes ?? "").trim();
+  const templateId = (body.templateId ?? DEFAULT_TEMPLATE_ID).trim();
 
   if (jobDescription.length < 30) {
     return NextResponse.json(
       { error: "Описание вакансии слишком короткое (нужно минимум 30 символов)" },
+      { status: 400 },
+    );
+  }
+
+  let template;
+  try {
+    template = getTemplate(templateId);
+  } catch (e) {
+    return NextResponse.json(
+      { error: (e as Error).message },
       { status: 400 },
     );
   }
@@ -57,17 +41,14 @@ export async function POST(req: NextRequest) {
       profile,
       jobDescription,
       userWishes: userWishes || undefined,
-      templateText,
-      templateFilename,
+      templateHint: template.promptHint,
+      templateName: template.name,
     });
-    const buffer = await renderResumeDocx(generated);
+    const buffer = await template.render(generated);
 
-    // Имя файла. Юникод-вариант для современных браузеров (RFC 5987),
-    // ASCII-фолбэк для старых клиентов. Без этого Node fetch отказывается
-    // ставить Cyrillic в Content-Disposition.
     const ts = Date.now();
-    const utf8Name = `Резюме ${profile.personal.shortName} ${ts}.docx`;
-    const asciiName = `resume-${ts}.docx`;
+    const utf8Name = `Резюме ${profile.personal.shortName} · ${template.name} ${ts}.docx`;
+    const asciiName = `resume-${template.id}-${ts}.docx`;
     const contentDisposition = `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(utf8Name)}`;
 
     return new NextResponse(buffer as unknown as BodyInit, {

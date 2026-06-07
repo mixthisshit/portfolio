@@ -6,26 +6,12 @@ import {
   AlignmentType,
   BorderStyle,
 } from "docx";
-import type { GeneratedResume } from "./anthropic";
+import type { GeneratedResume } from "../anthropic";
+import type { ResumeTemplate } from "./types";
 
 const FONT = "Calibri";
 const ACCENT = "5B5BE5";
 const MUTED = "555555";
-
-function p(text: string, opts: Partial<{ bold: boolean; size: number; color: string; spacingAfter: number }> = {}) {
-  return new Paragraph({
-    spacing: { after: opts.spacingAfter ?? 60 },
-    children: [
-      new TextRun({
-        text,
-        bold: opts.bold,
-        size: opts.size ?? 22,
-        color: opts.color,
-        font: FONT,
-      }),
-    ],
-  });
-}
 
 function sectionTitle(text: string) {
   return new Paragraph({
@@ -54,7 +40,7 @@ function bullet(text: string) {
 }
 
 function itemHeader(title: string, date?: string, subtitle?: string) {
-  const children = [];
+  const children: Paragraph[] = [];
   if (date) {
     children.push(
       new Paragraph({
@@ -67,15 +53,25 @@ function itemHeader(title: string, date?: string, subtitle?: string) {
       }),
     );
   } else {
-    children.push(p(title, { bold: true, size: 22, spacingAfter: 0 }));
+    children.push(
+      new Paragraph({
+        spacing: { after: 0 },
+        children: [new TextRun({ text: title, bold: true, size: 22, font: FONT })],
+      }),
+    );
   }
   if (subtitle) {
-    children.push(p(subtitle, { size: 20, color: MUTED, spacingAfter: 60 }));
+    children.push(
+      new Paragraph({
+        spacing: { after: 60 },
+        children: [new TextRun({ text: subtitle, size: 20, color: MUTED, font: FONT })],
+      }),
+    );
   }
   return children;
 }
 
-export async function renderResumeDocx(resume: GeneratedResume): Promise<Buffer> {
+async function render(resume: GeneratedResume): Promise<Buffer> {
   const children: Paragraph[] = [];
 
   // Headline
@@ -83,50 +79,35 @@ export async function renderResumeDocx(resume: GeneratedResume): Promise<Buffer>
     new Paragraph({
       alignment: AlignmentType.LEFT,
       spacing: { after: 60 },
-      children: [
-        new TextRun({ text: resume.headline, bold: true, size: 36, font: FONT }),
-      ],
+      children: [new TextRun({ text: resume.headline, bold: true, size: 36, font: FONT })],
     }),
   );
 
   // Contacts inline
   if (resume.contacts?.length) {
     const contactRuns = resume.contacts.flatMap((c, i) => {
-      const isUrl = c.value.startsWith("http") || c.value.includes("@") || c.value.startsWith("+");
       const sep = i > 0 ? "  •  " : "";
       const runs = [];
       if (sep) runs.push(new TextRun({ text: sep, color: MUTED, size: 20, font: FONT }));
       runs.push(
-        new TextRun({
-          text: `${c.label}: `,
-          color: MUTED,
-          size: 20,
-          font: FONT,
-        }),
-        new TextRun({
-          text: c.value,
-          color: isUrl ? ACCENT : undefined,
-          size: 20,
-          font: FONT,
-        }),
+        new TextRun({ text: `${c.label}: `, color: MUTED, size: 20, font: FONT }),
+        new TextRun({ text: c.value, size: 20, font: FONT }),
       );
       return runs;
     });
+    children.push(new Paragraph({ spacing: { after: 200 }, children: contactRuns }));
+  }
+
+  if (resume.summary) {
+    children.push(sectionTitle("О себе"));
     children.push(
       new Paragraph({
-        spacing: { after: 200 },
-        children: contactRuns,
+        spacing: { after: 80 },
+        children: [new TextRun({ text: resume.summary, size: 22, font: FONT })],
       }),
     );
   }
 
-  // Summary
-  if (resume.summary) {
-    children.push(sectionTitle("О себе"));
-    children.push(p(resume.summary, { size: 22, spacingAfter: 80 }));
-  }
-
-  // Experience
   if (resume.experience?.length) {
     children.push(sectionTitle("Опыт и кейсы"));
     resume.experience.forEach((e) => {
@@ -135,7 +116,6 @@ export async function renderResumeDocx(resume: GeneratedResume): Promise<Buffer>
     });
   }
 
-  // Projects
   if (resume.projects?.length) {
     children.push(sectionTitle("Проекты"));
     resume.projects.forEach((proj) => {
@@ -160,13 +140,19 @@ export async function renderResumeDocx(resume: GeneratedResume): Promise<Buffer>
         }),
       );
       if (proj.description) {
-        children.push(p(proj.description, { size: 21, color: MUTED, spacingAfter: 40 }));
+        children.push(
+          new Paragraph({
+            spacing: { after: 40 },
+            children: [
+              new TextRun({ text: proj.description, size: 21, color: MUTED, font: FONT }),
+            ],
+          }),
+        );
       }
       proj.bullets?.forEach((b) => children.push(bullet(b)));
     });
   }
 
-  // Skills
   if (resume.skills?.length) {
     children.push(sectionTitle("Навыки"));
     resume.skills.forEach((s) => {
@@ -182,7 +168,6 @@ export async function renderResumeDocx(resume: GeneratedResume): Promise<Buffer>
     });
   }
 
-  // Education
   if (resume.education?.length) {
     children.push(sectionTitle("Образование"));
     resume.education.forEach((e) => {
@@ -191,7 +176,6 @@ export async function renderResumeDocx(resume: GeneratedResume): Promise<Buffer>
     });
   }
 
-  // Languages
   if (resume.languages?.length) {
     children.push(sectionTitle("Языки"));
     children.push(
@@ -211,20 +195,10 @@ export async function renderResumeDocx(resume: GeneratedResume): Promise<Buffer>
   const doc = new Document({
     creator: resume.headline,
     title: `Резюме · ${resume.headline}`,
-    styles: {
-      default: {
-        document: {
-          run: { font: FONT, size: 22 },
-        },
-      },
-    },
+    styles: { default: { document: { run: { font: FONT, size: 22 } } } },
     sections: [
       {
-        properties: {
-          page: {
-            margin: { top: 720, bottom: 720, left: 900, right: 900 },
-          },
-        },
+        properties: { page: { margin: { top: 720, bottom: 720, left: 900, right: 900 } } },
         children,
       },
     ],
@@ -232,3 +206,36 @@ export async function renderResumeDocx(resume: GeneratedResume): Promise<Buffer>
 
   return await Packer.toBuffer(doc);
 }
+
+const previewSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 220" width="100%" height="100%">
+  <rect width="160" height="220" fill="#fff"/>
+  <rect x="14" y="18" width="76" height="10" fill="#1f1f2e"/>
+  <rect x="14" y="34" width="118" height="5" fill="#a0a0b0"/>
+  <rect x="14" y="48" width="80" height="3" fill="#5b5be5"/>
+  <rect x="14" y="58" width="118" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="65" width="118" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="72" width="92" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="88" width="48" height="3" fill="#5b5be5"/>
+  <rect x="14" y="98" width="118" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="105" width="100" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="112" width="110" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="119" width="80" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="135" width="48" height="3" fill="#5b5be5"/>
+  <rect x="14" y="145" width="118" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="152" width="100" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="168" width="48" height="3" fill="#5b5be5"/>
+  <rect x="14" y="178" width="118" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="185" width="100" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="192" width="80" height="2" fill="#e7e7ee"/>
+</svg>`;
+
+export const modernTemplate: ResumeTemplate = {
+  id: "modern",
+  name: "Modern",
+  description:
+    "Современный одностолбцовый. Sans-serif, фиолетовый акцент, разделители-линии под заголовками.",
+  promptHint:
+    "Стиль современный лаконичный. Summary 2-3 предложения. Буллеты компактные. Подходит для продуктовых/IT-вакансий.",
+  previewSvg,
+  render,
+};
