@@ -44,8 +44,15 @@ export async function extractTemplate(file: File): Promise<ExtractedTemplate> {
 
   const trimmed = text.trim();
   if (!trimmed) {
+    const isDocx = name.endsWith(".docx");
+    const isPdf = name.endsWith(".pdf");
+    const detail = isDocx
+      ? "Похоже, шаблон собран из картинок (часто бывает с экспортом из Canva, Figma или дизайнерских конструкторов)."
+      : isPdf
+        ? "Похоже, это скан или PDF без текстового слоя — текст там есть только в виде изображения."
+        : "";
     throw new Error(
-      "Не удалось извлечь текст из файла — возможно, это скан или защищённый PDF. Сохрани как .docx или попробуй PDF с распознаваемым текстом.",
+      `Не удалось извлечь текст из файла. ${detail} Возьми шаблон, в котором текст можно выделить мышкой как обычный текст (например, из Google Docs или текстового Word-документа), или опиши желаемую структуру в поле «Пожелания».`,
     );
   }
 
