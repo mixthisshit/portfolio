@@ -13,6 +13,7 @@ import {
 } from "docx";
 import type { GeneratedResume } from "../anthropic";
 import type { ResumeTemplate } from "./types";
+import { loadPhoto, photoParagraph } from "./photo";
 
 const FONT = "Calibri";
 const SIDEBAR_BG = "1F2937"; // тёмно-серый
@@ -125,8 +126,13 @@ function mainItemHeader(title: string, date?: string, subtitle?: string) {
 }
 
 async function render(resume: GeneratedResume): Promise<Buffer> {
+  const photo = loadPhoto();
   // === Содержимое сайдбара ===
   const sidebar: Paragraph[] = [];
+
+  // Фото в самом верху сайдбара
+  sidebar.push(photoParagraph(photo, 130));
+  sidebar.push(new Paragraph({ spacing: { after: 200 }, children: [] }));
 
   // Имя крупно в сайдбаре
   sidebar.push(
@@ -301,22 +307,24 @@ async function render(resume: GeneratedResume): Promise<Buffer> {
 const previewSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 220" width="100%" height="100%">
   <rect width="160" height="220" fill="#fff"/>
   <rect x="0" y="0" width="55" height="220" fill="#1f2937"/>
-  <rect x="6" y="14" width="42" height="6" fill="#f3f4f6"/>
-  <rect x="6" y="22" width="32" height="4" fill="#f59e0b"/>
-  <rect x="6" y="42" width="32" height="3" fill="#f59e0b"/>
-  <rect x="6" y="50" width="42" height="2" fill="#9ca3af"/>
-  <rect x="6" y="55" width="38" height="2" fill="#f3f4f6"/>
-  <rect x="6" y="62" width="42" height="2" fill="#9ca3af"/>
-  <rect x="6" y="67" width="36" height="2" fill="#f3f4f6"/>
-  <rect x="6" y="80" width="32" height="3" fill="#f59e0b"/>
-  <rect x="6" y="88" width="42" height="2" fill="#f3f4f6"/>
-  <rect x="6" y="93" width="38" height="2" fill="#f3f4f6"/>
-  <rect x="6" y="98" width="40" height="2" fill="#f3f4f6"/>
-  <rect x="6" y="110" width="32" height="3" fill="#f59e0b"/>
-  <rect x="6" y="118" width="40" height="2" fill="#f3f4f6"/>
-  <rect x="6" y="125" width="36" height="2" fill="#f3f4f6"/>
-  <rect x="6" y="140" width="32" height="3" fill="#f59e0b"/>
-  <rect x="6" y="148" width="38" height="2" fill="#f3f4f6"/>
+  <rect x="13" y="10" width="28" height="28" fill="#374151" stroke="#f59e0b" stroke-width="0.6"/>
+  <text x="27" y="27" font-size="4" fill="#9ca3af" text-anchor="middle" font-family="Calibri">Фото</text>
+  <rect x="6" y="46" width="42" height="5" fill="#f3f4f6"/>
+  <rect x="6" y="54" width="32" height="3" fill="#f59e0b"/>
+  <rect x="6" y="70" width="28" height="3" fill="#f59e0b"/>
+  <rect x="6" y="78" width="42" height="2" fill="#9ca3af"/>
+  <rect x="6" y="83" width="38" height="2" fill="#f3f4f6"/>
+  <rect x="6" y="90" width="42" height="2" fill="#9ca3af"/>
+  <rect x="6" y="95" width="36" height="2" fill="#f3f4f6"/>
+  <rect x="6" y="108" width="28" height="3" fill="#f59e0b"/>
+  <rect x="6" y="116" width="42" height="2" fill="#f3f4f6"/>
+  <rect x="6" y="121" width="38" height="2" fill="#f3f4f6"/>
+  <rect x="6" y="126" width="40" height="2" fill="#f3f4f6"/>
+  <rect x="6" y="138" width="28" height="3" fill="#f59e0b"/>
+  <rect x="6" y="146" width="40" height="2" fill="#f3f4f6"/>
+  <rect x="6" y="151" width="36" height="2" fill="#f3f4f6"/>
+  <rect x="6" y="166" width="28" height="3" fill="#f59e0b"/>
+  <rect x="6" y="174" width="38" height="2" fill="#f3f4f6"/>
   <rect x="62" y="14" width="40" height="3" fill="#1f2937"/>
   <line x1="62" y1="20" x2="148" y2="20" stroke="#f59e0b" stroke-width="0.8"/>
   <rect x="62" y="24" width="86" height="2" fill="#d1d5db"/>

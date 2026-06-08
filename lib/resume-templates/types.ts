@@ -1,6 +1,12 @@
 import type { GeneratedResume } from "../anthropic";
 
-export type TemplateId = "modern" | "classic" | "two-column";
+export type TemplateId =
+  | "modern"
+  | "classic"
+  | "two-column"
+  | "minimal"
+  | "compact"
+  | "bold";
 
 export type ResumeTemplate = {
   id: TemplateId;

@@ -3,11 +3,16 @@ import {
   Packer,
   Paragraph,
   TextRun,
-  AlignmentType,
   BorderStyle,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  VerticalAlign,
 } from "docx";
 import type { GeneratedResume } from "../anthropic";
 import type { ResumeTemplate } from "./types";
+import { loadPhoto, photoCell } from "./photo";
 
 const FONT = "Calibri";
 const ACCENT = "5B5BE5";
@@ -41,25 +46,20 @@ function bullet(text: string) {
 
 function itemHeader(title: string, date?: string, subtitle?: string) {
   const children: Paragraph[] = [];
-  if (date) {
-    children.push(
-      new Paragraph({
-        spacing: { after: 0 },
-        children: [
-          new TextRun({ text: title, bold: true, size: 22, font: FONT }),
-          new TextRun({ text: "    ", size: 22, font: FONT }),
-          new TextRun({ text: date, size: 20, color: MUTED, italics: true, font: FONT }),
-        ],
-      }),
-    );
-  } else {
-    children.push(
-      new Paragraph({
-        spacing: { after: 0 },
-        children: [new TextRun({ text: title, bold: true, size: 22, font: FONT })],
-      }),
-    );
-  }
+  children.push(
+    new Paragraph({
+      spacing: { after: 0 },
+      children: [
+        new TextRun({ text: title, bold: true, size: 22, font: FONT }),
+        ...(date
+          ? [
+              new TextRun({ text: "    ", size: 22, font: FONT }),
+              new TextRun({ text: date, size: 20, color: MUTED, italics: true, font: FONT }),
+            ]
+          : []),
+      ],
+    }),
+  );
   if (subtitle) {
     children.push(
       new Paragraph({
@@ -72,35 +72,63 @@ function itemHeader(title: string, date?: string, subtitle?: string) {
 }
 
 async function render(resume: GeneratedResume): Promise<Buffer> {
-  const children: Paragraph[] = [];
+  const photo = loadPhoto();
+  const sections: (Paragraph | Table)[] = [];
 
-  // Headline
-  children.push(
-    new Paragraph({
-      alignment: AlignmentType.LEFT,
-      spacing: { after: 60 },
-      children: [new TextRun({ text: resume.headline, bold: true, size: 36, font: FONT })],
-    }),
-  );
+  const noBorder = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
 
-  // Contacts inline
-  if (resume.contacts?.length) {
-    const contactRuns = resume.contacts.flatMap((c, i) => {
-      const sep = i > 0 ? "  •  " : "";
-      const runs = [];
-      if (sep) runs.push(new TextRun({ text: sep, color: MUTED, size: 20, font: FONT }));
-      runs.push(
-        new TextRun({ text: `${c.label}: `, color: MUTED, size: 20, font: FONT }),
-        new TextRun({ text: c.value, size: 20, font: FONT }),
-      );
-      return runs;
-    });
-    children.push(new Paragraph({ spacing: { after: 200 }, children: contactRuns }));
-  }
+  // Header: [text | photo] таблица
+  const headerTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    columnWidths: [7500, 2500],
+    borders: {
+      top: noBorder,
+      bottom: noBorder,
+      left: noBorder,
+      right: noBorder,
+      insideHorizontal: noBorder,
+      insideVertical: noBorder,
+    },
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 75, type: WidthType.PERCENTAGE },
+            margins: { top: 0, bottom: 0, left: 0, right: 200 },
+            verticalAlign: VerticalAlign.CENTER,
+            borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+            children: [
+              new Paragraph({
+                spacing: { after: 60 },
+                children: [
+                  new TextRun({ text: resume.headline, bold: true, size: 36, font: FONT }),
+                ],
+              }),
+              new Paragraph({
+                spacing: { after: 0 },
+                children: (resume.contacts ?? []).flatMap((c, i) => {
+                  const sep = i > 0 ? "  •  " : "";
+                  const runs = [];
+                  if (sep) runs.push(new TextRun({ text: sep, color: MUTED, size: 20, font: FONT }));
+                  runs.push(
+                    new TextRun({ text: `${c.label}: `, color: MUTED, size: 20, font: FONT }),
+                    new TextRun({ text: c.value, size: 20, font: FONT }),
+                  );
+                  return runs;
+                }),
+              }),
+            ],
+          }),
+          photoCell(photo, { widthPt: 80, heightPt: 80, borderColor: ACCENT }),
+        ],
+      }),
+    ],
+  });
+  sections.push(headerTable);
 
   if (resume.summary) {
-    children.push(sectionTitle("О себе"));
-    children.push(
+    sections.push(sectionTitle("О себе"));
+    sections.push(
       new Paragraph({
         spacing: { after: 80 },
         children: [new TextRun({ text: resume.summary, size: 22, font: FONT })],
@@ -109,17 +137,17 @@ async function render(resume: GeneratedResume): Promise<Buffer> {
   }
 
   if (resume.experience?.length) {
-    children.push(sectionTitle("Опыт и кейсы"));
+    sections.push(sectionTitle("Опыт и кейсы"));
     resume.experience.forEach((e) => {
-      itemHeader(e.title, e.date, e.subtitle).forEach((p) => children.push(p));
-      e.bullets.forEach((b) => children.push(bullet(b)));
+      itemHeader(e.title, e.date, e.subtitle).forEach((p) => sections.push(p));
+      e.bullets.forEach((b) => sections.push(bullet(b)));
     });
   }
 
   if (resume.projects?.length) {
-    children.push(sectionTitle("Проекты"));
+    sections.push(sectionTitle("Проекты"));
     resume.projects.forEach((proj) => {
-      children.push(
+      sections.push(
         new Paragraph({
           spacing: { after: 0 },
           children: [
@@ -140,7 +168,7 @@ async function render(resume: GeneratedResume): Promise<Buffer> {
         }),
       );
       if (proj.description) {
-        children.push(
+        sections.push(
           new Paragraph({
             spacing: { after: 40 },
             children: [
@@ -149,14 +177,14 @@ async function render(resume: GeneratedResume): Promise<Buffer> {
           }),
         );
       }
-      proj.bullets?.forEach((b) => children.push(bullet(b)));
+      proj.bullets?.forEach((b) => sections.push(bullet(b)));
     });
   }
 
   if (resume.skills?.length) {
-    children.push(sectionTitle("Навыки"));
+    sections.push(sectionTitle("Навыки"));
     resume.skills.forEach((s) => {
-      children.push(
+      sections.push(
         new Paragraph({
           spacing: { after: 60 },
           children: [
@@ -169,16 +197,16 @@ async function render(resume: GeneratedResume): Promise<Buffer> {
   }
 
   if (resume.education?.length) {
-    children.push(sectionTitle("Образование"));
+    sections.push(sectionTitle("Образование"));
     resume.education.forEach((e) => {
-      itemHeader(e.title, e.date, e.subtitle).forEach((p) => children.push(p));
-      e.bullets?.forEach((b) => children.push(bullet(b)));
+      itemHeader(e.title, e.date, e.subtitle).forEach((p) => sections.push(p));
+      e.bullets?.forEach((b) => sections.push(bullet(b)));
     });
   }
 
   if (resume.languages?.length) {
-    children.push(sectionTitle("Языки"));
-    children.push(
+    sections.push(sectionTitle("Языки"));
+    sections.push(
       new Paragraph({
         spacing: { after: 60 },
         children: [
@@ -199,7 +227,7 @@ async function render(resume: GeneratedResume): Promise<Buffer> {
     sections: [
       {
         properties: { page: { margin: { top: 720, bottom: 720, left: 900, right: 900 } } },
-        children,
+        children: sections,
       },
     ],
   });
@@ -210,30 +238,33 @@ async function render(resume: GeneratedResume): Promise<Buffer> {
 const previewSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 220" width="100%" height="100%">
   <rect width="160" height="220" fill="#fff"/>
   <rect x="14" y="18" width="76" height="10" fill="#1f1f2e"/>
-  <rect x="14" y="34" width="118" height="5" fill="#a0a0b0"/>
-  <rect x="14" y="48" width="80" height="3" fill="#5b5be5"/>
-  <rect x="14" y="58" width="118" height="2" fill="#e7e7ee"/>
-  <rect x="14" y="65" width="118" height="2" fill="#e7e7ee"/>
-  <rect x="14" y="72" width="92" height="2" fill="#e7e7ee"/>
-  <rect x="14" y="88" width="48" height="3" fill="#5b5be5"/>
-  <rect x="14" y="98" width="118" height="2" fill="#e7e7ee"/>
-  <rect x="14" y="105" width="100" height="2" fill="#e7e7ee"/>
-  <rect x="14" y="112" width="110" height="2" fill="#e7e7ee"/>
-  <rect x="14" y="119" width="80" height="2" fill="#e7e7ee"/>
-  <rect x="14" y="135" width="48" height="3" fill="#5b5be5"/>
-  <rect x="14" y="145" width="118" height="2" fill="#e7e7ee"/>
-  <rect x="14" y="152" width="100" height="2" fill="#e7e7ee"/>
-  <rect x="14" y="168" width="48" height="3" fill="#5b5be5"/>
-  <rect x="14" y="178" width="118" height="2" fill="#e7e7ee"/>
-  <rect x="14" y="185" width="100" height="2" fill="#e7e7ee"/>
-  <rect x="14" y="192" width="80" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="34" width="80" height="4" fill="#a0a0b0"/>
+  <rect x="14" y="40" width="70" height="3" fill="#a0a0b0"/>
+  <rect x="116" y="18" width="30" height="30" fill="#e7e7ee" stroke="#5b5be5" stroke-width="0.6"/>
+  <text x="131" y="36" font-size="6" fill="#999" text-anchor="middle" font-family="Calibri, sans-serif">Фото</text>
+  <rect x="14" y="56" width="80" height="3" fill="#5b5be5"/>
+  <rect x="14" y="66" width="118" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="73" width="118" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="80" width="92" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="96" width="48" height="3" fill="#5b5be5"/>
+  <rect x="14" y="106" width="118" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="113" width="100" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="120" width="110" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="127" width="80" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="143" width="48" height="3" fill="#5b5be5"/>
+  <rect x="14" y="153" width="118" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="160" width="100" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="176" width="48" height="3" fill="#5b5be5"/>
+  <rect x="14" y="186" width="118" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="193" width="100" height="2" fill="#e7e7ee"/>
+  <rect x="14" y="200" width="80" height="2" fill="#e7e7ee"/>
 </svg>`;
 
 export const modernTemplate: ResumeTemplate = {
   id: "modern",
   name: "Modern",
   description:
-    "Современный одностолбцовый. Sans-serif, фиолетовый акцент, разделители-линии под заголовками.",
+    "Современный одностолбцовый. Sans-serif, фиолетовый акцент, фото справа в шапке.",
   promptHint:
     "Стиль современный лаконичный. Summary 2-3 предложения. Буллеты компактные. Подходит для продуктовых/IT-вакансий.",
   previewSvg,

@@ -5,9 +5,13 @@ import {
   TextRun,
   AlignmentType,
   BorderStyle,
+  Table,
+  TableRow,
+  WidthType,
 } from "docx";
 import type { GeneratedResume } from "../anthropic";
 import type { ResumeTemplate } from "./types";
+import { loadPhoto, photoCell } from "./photo";
 
 const FONT = "Georgia";
 
@@ -66,7 +70,36 @@ function itemHeader(title: string, date?: string, subtitle?: string) {
 }
 
 async function render(resume: GeneratedResume): Promise<Buffer> {
-  const children: Paragraph[] = [];
+  const photo = loadPhoto();
+  const children: (Paragraph | Table)[] = [];
+
+  // Фото по центру, выше имени
+  const noBorder = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+  const photoOnlyTable = new Table({
+    alignment: AlignmentType.CENTER,
+    width: { size: 1800, type: WidthType.DXA },
+    columnWidths: [1800],
+    borders: {
+      top: noBorder,
+      bottom: noBorder,
+      left: noBorder,
+      right: noBorder,
+      insideHorizontal: noBorder,
+      insideVertical: noBorder,
+    },
+    rows: [
+      new TableRow({
+        children: [photoCell(photo, { widthPt: 90, heightPt: 90 })],
+      }),
+    ],
+  });
+  children.push(photoOnlyTable);
+  children.push(
+    new Paragraph({
+      spacing: { before: 120, after: 0 },
+      children: [],
+    }),
+  );
 
   // Имя по центру
   children.push(
@@ -201,27 +234,29 @@ async function render(resume: GeneratedResume): Promise<Buffer> {
 
 const previewSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 220" width="100%" height="100%">
   <rect width="160" height="220" fill="#fdfcf8"/>
-  <text x="80" y="28" font-family="Georgia, serif" font-size="11" font-weight="700" text-anchor="middle" fill="#1a1a1a">FIRST LAST</text>
-  <text x="80" y="40" font-family="Georgia, serif" font-size="5" text-anchor="middle" fill="#666">email • +7 ••• ••• ••• • city</text>
-  <line x1="20" y1="54" x2="140" y2="54" stroke="#1a1a1a" stroke-width="0.6"/>
-  <text x="80" y="63" font-family="Georgia, serif" font-size="5" text-anchor="middle" fill="#1a1a1a" font-weight="700">ABOUT</text>
-  <line x1="20" y1="68" x2="140" y2="68" stroke="#1a1a1a" stroke-width="0.6"/>
-  <rect x="20" y="74" width="120" height="2" fill="#d8d3c8"/>
-  <rect x="20" y="80" width="105" height="2" fill="#d8d3c8"/>
-  <rect x="20" y="86" width="115" height="2" fill="#d8d3c8"/>
-  <line x1="20" y1="100" x2="140" y2="100" stroke="#1a1a1a" stroke-width="0.6"/>
-  <text x="80" y="109" font-family="Georgia, serif" font-size="5" text-anchor="middle" fill="#1a1a1a" font-weight="700">EXPERIENCE</text>
+  <rect x="65" y="12" width="30" height="30" fill="#e7e7ee" stroke="#1a1a1a" stroke-width="0.6"/>
+  <text x="80" y="30" font-size="5" fill="#999" text-anchor="middle" font-family="Georgia, serif">Фото</text>
+  <text x="80" y="55" font-family="Georgia, serif" font-size="9" font-weight="700" text-anchor="middle" fill="#1a1a1a">FIRST LAST</text>
+  <text x="80" y="65" font-family="Georgia, serif" font-size="4" text-anchor="middle" fill="#666">email • phone • city</text>
+  <line x1="20" y1="74" x2="140" y2="74" stroke="#1a1a1a" stroke-width="0.6"/>
+  <text x="80" y="82" font-family="Georgia, serif" font-size="4" text-anchor="middle" fill="#1a1a1a" font-weight="700">ABOUT</text>
+  <line x1="20" y1="86" x2="140" y2="86" stroke="#1a1a1a" stroke-width="0.6"/>
+  <rect x="20" y="92" width="120" height="1.5" fill="#d8d3c8"/>
+  <rect x="20" y="97" width="105" height="1.5" fill="#d8d3c8"/>
+  <rect x="20" y="102" width="115" height="1.5" fill="#d8d3c8"/>
   <line x1="20" y1="114" x2="140" y2="114" stroke="#1a1a1a" stroke-width="0.6"/>
-  <rect x="20" y="120" width="80" height="3" fill="#1a1a1a"/>
-  <rect x="20" y="127" width="118" height="2" fill="#d8d3c8"/>
-  <rect x="20" y="133" width="100" height="2" fill="#d8d3c8"/>
-  <line x1="20" y1="148" x2="140" y2="148" stroke="#1a1a1a" stroke-width="0.6"/>
-  <text x="80" y="157" font-family="Georgia, serif" font-size="5" text-anchor="middle" fill="#1a1a1a" font-weight="700">EDUCATION</text>
-  <line x1="20" y1="162" x2="140" y2="162" stroke="#1a1a1a" stroke-width="0.6"/>
-  <rect x="20" y="168" width="120" height="2" fill="#d8d3c8"/>
-  <rect x="20" y="174" width="100" height="2" fill="#d8d3c8"/>
-  <line x1="20" y1="188" x2="140" y2="188" stroke="#1a1a1a" stroke-width="0.6"/>
-  <text x="80" y="197" font-family="Georgia, serif" font-size="5" text-anchor="middle" fill="#1a1a1a" font-weight="700">LANGUAGES</text>
+  <text x="80" y="122" font-family="Georgia, serif" font-size="4" text-anchor="middle" fill="#1a1a1a" font-weight="700">EXPERIENCE</text>
+  <line x1="20" y1="126" x2="140" y2="126" stroke="#1a1a1a" stroke-width="0.6"/>
+  <rect x="20" y="132" width="80" height="2.5" fill="#1a1a1a"/>
+  <rect x="20" y="138" width="118" height="1.5" fill="#d8d3c8"/>
+  <rect x="20" y="143" width="100" height="1.5" fill="#d8d3c8"/>
+  <line x1="20" y1="155" x2="140" y2="155" stroke="#1a1a1a" stroke-width="0.6"/>
+  <text x="80" y="163" font-family="Georgia, serif" font-size="4" text-anchor="middle" fill="#1a1a1a" font-weight="700">EDUCATION</text>
+  <line x1="20" y1="167" x2="140" y2="167" stroke="#1a1a1a" stroke-width="0.6"/>
+  <rect x="20" y="173" width="120" height="1.5" fill="#d8d3c8"/>
+  <rect x="20" y="178" width="100" height="1.5" fill="#d8d3c8"/>
+  <line x1="20" y1="190" x2="140" y2="190" stroke="#1a1a1a" stroke-width="0.6"/>
+  <text x="80" y="198" font-family="Georgia, serif" font-size="4" text-anchor="middle" fill="#1a1a1a" font-weight="700">LANGUAGES</text>
   <line x1="20" y1="202" x2="140" y2="202" stroke="#1a1a1a" stroke-width="0.6"/>
 </svg>`;
 
